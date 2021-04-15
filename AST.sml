@@ -1,48 +1,25 @@
 structure AST =
 struct
-	datatype
-		node =
-		EOF
-	|	TERM
-	|	IF
-	|	THEN
-	|	ELSE
-	|	IMPLIES
-	|	NOT
-	|	LPAREN
-	|	RPAREN
-	|	AND
-	|	OR
-	|	XOR
-	|	EQUALS
-	|	CONST of string
-	|	ID of string
-	|	Production of string * node list
+	type id = string
+	datatype value = IntVal of int | BoolVal of bool
+	type env = (id * value) list
 
-	fun postOrder node =
-		case node of
-			EOF		=> print("EOF\n")
-		|	TERM	=> print("TERM\n")
-		|	IF		=> print("IF\n")
-		|	THEN	=> print("THEN\n")
-		|	ELSE	=> print("ELSE\n")
-		|	IMPLIES	=> print("IMPLIES\n")
-		|	NOT		=> print("NOT\n")
-		|	LPAREN	=> print("LPAREN\n")
-		|	RPAREN	=> print("RPAREN\n")
-		|	AND		=> print("AND\n")
-		|	OR		=> print("OR\n")
-		|	XOR		=> print("XOR\n")
-		|	EQUALS	=> print("EQUALS\n")
-		|	CONST c	=> print("CONST: " ^ c ^ "\n")
-		|	ID id	=> print("ID: " ^ id ^ "\n")
-		|	Production (rule, lst) =>
-				let
-					fun iterateList lst =
-						case lst of
-							nil		=> ()
-						|	h::t	=> (postOrder h; iterateList t)
-				in
-					(iterateList lst; print(rule ^ "\n"))
-				end
+	datatype binop = IMPLIES | AND | OR | XOR | EQUALS | LESSTHAN | GREATERTHAN | PLUS | MINUS | TIMES
+	datatype unop = NOT | NEGATE
+
+	datatype 	decl	= ValDecl of id * exp
+	and			exp		= BoolExp of bool
+						| IntExp of int
+						| VarExp of id
+						| LetExp of decl * exp
+						| ITExp of exp * exp * exp
+						| BinExp of binop * exp * exp
+						| UnExp of unop * exp
+
+	fun envLookup (var: id, e: env): value =
+		case List.find(fn (x, _) => x = var) e of
+			SOME (x, v) => v
+		|	NONE		=> raise Fail "Use of undeclared variable"
+	
+	fun envAdd (var: id, v: value, e: env): env = (var, v)::e
 end

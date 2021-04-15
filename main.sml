@@ -39,10 +39,8 @@ fun main () =
 			val _ = TextIO.closeIn inputStream
 
 			val tree = parse (stringToLexer str)
-			val _ = AST.postOrder tree
 		in
-			()
+			tree
 		end
-		handle Exception => ();
 
 val _ = main ();

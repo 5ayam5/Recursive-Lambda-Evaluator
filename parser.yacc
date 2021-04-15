@@ -1,9 +1,9 @@
 %%
 %name A3
 %term
-	EOF | TERM | IF | THEN | ELSE | IMPLIES | NOT | LPAREN | RPAREN | AND | OR | XOR | EQUALS | CONST of string | ID of string
+	EOF | TERM | IF | THEN | ELSE | FI | IMPLIES | NOT | LPAREN | RPAREN | AND | OR | XOR | EQUALS | PLUS | MINUS | TIMES | NEGATE | LESSTHAN | GREATERTHAN | LET | ASSIGN | IN | END | BOOL of string | NUM of int | ID of string
 %nonterm
-	InputFile of AST.node | program of AST.node | statement of AST.node | formula of AST.node
+	InputFile of AST.exp list | program of AST.exp list | statement of AST.exp | formula of AST.exp
 %pos int
 
 %start InputFile
@@ -11,28 +11,40 @@
 %eop EOF
 %noshift EOF
 
-%right IF THEN ELSE
+%right IF THEN ELSE FI
 %right IMPLIES
 %left AND OR XOR EQUALS
 %right NOT
+%left LESSTHAN GREATERTHAN
+%left PLUS MINUS
+%left TIMES
+%left NEGATE
 
 %verbose
 
 %%
-	InputFile:	program (AST.Production ("InputFile -> program", [program]))
+	InputFile:	program (program)
 	
-	program:	statement program (AST.Production ("program -> statement program", [statement, program]))
-			|	(AST.Production ("program -> epsilon", []))
+	program:	statement program (statement::program)
+			|	statement ([statement])
 	
-	statement:	formula TERM (AST.Production ("statement -> formula TERM", [formula, AST.TERM]))
+	statement:	formula TERM (formula)
 
-	formula:	NOT formula (AST.Production ("formula -> NOT formula", [AST.NOT, formula]))
-			|	formula AND formula (AST.Production ("formula -> formula AND formula", [formula1, AST.AND, formula2]))
-			|	formula OR formula (AST.Production ("formula -> formula OR formula", [formula1, AST.OR, formula2]))
-			|	formula XOR formula (AST.Production ("formula -> formula XOR formula", [formula1, AST.XOR, formula2]))
-			|	formula EQUALS formula (AST.Production ("formula -> formula EQUALS formula", [formula1, AST.EQUALS, formula2]))
-			|	formula IMPLIES formula (AST.Production ("formula -> formula IMPLIES formula", [formula1, AST.IMPLIES, formula2]))
-			|	IF formula THEN formula ELSE formula (AST.Production ("formula -> IF formula THEN formula ELSE formula", [AST.IF, formula1, AST.THEN, formula2, AST.ELSE, formula3]))
-			|	LPAREN formula RPAREN (AST.Production ("formula -> LPAREN formula RPAREN", [AST.LPAREN, formula, AST.RPAREN]))
-			|	CONST (AST.CONST CONST)
-			|	ID	(AST.ID ID)
+	formula:	BOOL (if BOOL = "TRUE" then AST.BoolExp true else AST.BoolExp false)
+			|	NUM (AST.IntExp NUM)
+			|	ID (AST.VarExp ID)
+			|	LET ID ASSIGN formula IN formula END (AST.LetExp (AST.ValDecl (ID, formula1), formula2))
+			|	IF formula THEN formula ELSE formula FI (AST.ITExp (formula1, formula2, formula3))
+			|	formula IMPLIES formula (AST.BinExp (AST.IMPLIES, formula1, formula2))
+			|	formula AND formula (AST.BinExp (AST.AND, formula1, formula2))
+			|	formula OR formula (AST.BinExp (AST.OR, formula1, formula2))
+			|	formula XOR formula (AST.BinExp (AST.XOR, formula1, formula2))
+			|	formula EQUALS formula (AST.BinExp (AST.EQUALS, formula1, formula2))
+			|	formula LESSTHAN formula (AST.BinExp (AST.LESSTHAN, formula1, formula2))
+			|	formula GREATERTHAN formula (AST.BinExp (AST.GREATERTHAN, formula1, formula2))
+			|	formula PLUS formula (AST.BinExp (AST.PLUS, formula1, formula2))
+			|	formula MINUS formula (AST.BinExp (AST.MINUS, formula1, formula2))
+			|	formula TIMES formula (AST.BinExp (AST.TIMES, formula1, formula2))
+			|	NOT formula (AST.UnExp (AST.NOT, formula))
+			|	NEGATE formula (AST.UnExp (AST.NEGATE, formula))
+			|	LPAREN formula RPAREN (formula)
