@@ -3,4 +3,4 @@ if 3 GREATERTHAN 2
 		X AND NOT X 
 		end
 	else TRUE
-fi;
+fi
