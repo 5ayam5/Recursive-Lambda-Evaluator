@@ -38,9 +38,10 @@ fun main () =
 			val str = TextIO.input inputStream
 			val _ = TextIO.closeIn inputStream
 
-			val tree = parse (stringToLexer str)
+			val programList = parse (stringToLexer str)
+			val _ = AST.typeCheckList (programList, [])
 		in
-			tree
+			AST.evalList (programList, [])
 		end
 
 val _ = main ();

@@ -1,6 +1,6 @@
 all: lexer.lex.sml parser.yacc.* a2
 
-a2: a2.mlb lexer.lex.sml parser.yacc.*
+a2: a2.mlb lexer.lex.sml parser.yacc.* AST.sml main.sml
 	mlton a2.mlb
 
 lexer.lex.sml: lexer.lex
