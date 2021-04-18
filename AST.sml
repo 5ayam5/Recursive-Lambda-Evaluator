@@ -28,9 +28,15 @@ struct
 	fun envLookup (var: id, e: env): value =
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
-		|	NONE		=> raise Fail "Use of undeclared variable"
+		|	NONE		=> raise Fail ("Use of undeclared variable: " ^ var ^ "\n")
 	
 	fun envAdd (var: id, v: value, e: env): env = (var, v)::e
+
+	fun typToString (ty: typ): string =
+		case ty of
+			Int		=> "int"
+		|	Bool	=> "bool"
+		|	Arrow (typ1, typ2) => "(" ^ typToString typ1 ^ " -> " ^ typToString typ2 ^ ")"
 
 	fun typeCheckExp (expr: exp, e: env): typ * env =
 		case expr of
@@ -54,9 +60,7 @@ struct
 				end
 		|	ITExp (exp1, exp2, exp3) =>
 				(case typeCheckExp (exp1, e) of
-					(Int, _)			=> raise Fail "Type check failed: predicate not of type boolean"
-				|	(Arrow (_, _), _)	=> raise Fail "Type check failed: predicate not of type boolean"
-				|	(Bool, _) =>
+					(Bool, _) =>
 						let
 							val (ret2, _) = typeCheckExp (exp2, e)
 							val (ret3, _) = typeCheckExp (exp3, e)
@@ -64,9 +68,10 @@ struct
 							case (ret2, ret3) of
 								(Int, Int)				=> (Int, e)
 							|	(Bool, Bool)			=> (Bool, e)
-							|	(Arrow a1, Arrow a2)	=> if a1 = a2 then (Arrow a1, e) else raise Fail "Type check failed: type mismatch in if branches"
-							|	(_, _)					=> raise Fail "Type check failed: type mismatch in if branches"
-						end)
+							|	(Arrow a1, Arrow a2)	=> if a1 = a2 then (Arrow a1, e) else raise Fail "Type check failed: type mismatch in if branches\n"
+							|	_ => raise Fail "Type check failed: type mismatch in if branches\n"
+						end
+				|	_ => raise Fail "Type check failed: predicate not of type boolean\n")
 		|	BinExp (biop, exp1, exp2) =>
 				let
 					val (ret1, _) = typeCheckExp (exp1, e)
@@ -77,37 +82,37 @@ struct
 												II _	=> (Int, e)
 											|	IB _	=> (Bool, e)
 											|	EQUALS	=> (Bool, e)
-											|	BB _	=> raise Fail "Type check failed: type mismatch for binop, int operands for bool operator")
+											|	BB _	=> raise Fail "Type check failed: type mismatch for binop, int operands for bool operator\n")
 					|	(Bool, Bool)	=> (case biop of
 												BB _	=> (Bool, e)
 											|	EQUALS	=> (Bool, e)
-											|	_		=> raise Fail "Type check failed: type mismatch for binop, bool operands for int operator")
-					|	(_, _)			=> raise Fail "Type check failed: type mismatch for binop, invalid left and right operands"
+											|	_		=> raise Fail "Type check failed: type mismatch for binop, bool operands for int operator\n")
+					|	_ => raise Fail "Type check failed: type mismatch for binop, invalid left and right operands\n"
 				end
 		|	UnExp (uop, exp1) =>
 				(case uop of
 					NOT		=> (case typeCheckExp (exp1, e) of
 									(Bool, _)	=> (Bool, e)
-								|	_			=> raise Fail "Type check failed: type mismatch for unop, incorrect operand for bool operator")
+								|	_			=> raise Fail "Type check failed: type mismatch for unop, incorrect operand for bool operator\n")
 				|	NEGATE	=> (case typeCheckExp (exp1, e) of
 									(Int, _)	=> (Int, e)
-								|	_			=> raise Fail "Type check failed: type mismatch for unop, incorrect operand for int operator"))
+								|	_			=> raise Fail "Type check failed: type mismatch for unop, incorrect operand for int operator\n"))
 		|	AppExp (f, exp1) =>
 				let
 					val (ret, _) = typeCheckExp (exp1, e)
 				in
 					case envLookup (f, e) of
-						Lambda (_, typ1, typ2, _) => if typ1 = ret then (typ2, e) else raise Fail "Function applied to wrong argument"
-					|	_ => raise Fail "ID not of type function"	
+						Lambda (_, typ1, typ2, _) => if typ1 = ret then (typ2, e) else raise Fail "Function applied to wrong argument\n"
+					|	_ => raise Fail "ID not of type function\n"	
 				end
 		|	LambdaExp v =>
 				(case v of
 					Lambda (_, typ1, typ2, _) => (Arrow (typ1, typ2), e)
-				|	_ => raise Fail "Not a lambda application")
+				|	_ => raise Fail "Not a lambda application\n")
 		|	FuncExp (f, v) =>
 				(case v of
 					Lambda (y, typ1, typ2, exp1) => (Arrow (typ1, typ2), envAdd (f, Lambda (y, typ1, typ2, exp1), e))
-				|	_ => raise Fail "Not a function declaration")
+				|	_ => raise Fail "Not a function declaration\n")
 	
 	fun	typeCheckList (nil: exp list, e: env): bool = true
 	|	typeCheckList (h::t: exp list, e: env): bool =
@@ -133,7 +138,7 @@ struct
 				(case evalExp (exp1, e) of
 					(BoolVal true, _)	=> evalExp (exp2, e)
 				|	(BoolVal false, _)	=> evalExp (exp3, e)
-				|	_ => raise Fail "Type fail, uncaught during type checking")
+				|	_ => raise Fail "Type fail, uncaught during type checking\n")
 		|	BinExp (biop, exp1, exp2) =>
 				(case (evalExp (exp1, e), evalExp (exp2, e)) of
 					((BoolVal b1, _), (BoolVal b2, _))	=>
@@ -145,7 +150,7 @@ struct
 								|	AND		=> (BoolVal (b1 andalso b2), e)
 								|	OR		=> (BoolVal (b1 orelse b2), e)
 								|	XOR		=> (BoolVal (b1 <> b2), e))
-						|	_ => raise Fail "Type fail, uncaught during type checking")
+						|	_ => raise Fail "Type fail, uncaught during type checking\n")
 				|	((IntVal i, _), (IntVal j, _))		=>
 						(case biop of
 							EQUALS	=> (BoolVal (i = j), e)
@@ -158,18 +163,18 @@ struct
 									PLUS	=> (IntVal (i + j), e)
 								|	MINUS	=> (IntVal (i - j), e)
 								|	TIMES	=> (IntVal (i * j), e))
-						|	_ => raise Fail "Type fail, uncaught during type checking")
-				| _ => raise Fail "Type fail, uncaught during type checking")
+						|	_ => raise Fail "Type fail, uncaught during type checking\n")
+				| _ => raise Fail "Type fail, uncaught during type checking\n")
 		|	UnExp (uop, exp1) =>
 				(case uop of
 					NOT		=>
 						(case evalExp (exp1, e) of
 							(BoolVal b, _) => (BoolVal (not b), e)
-						|	_ => raise Fail "Type fail, uncaught during type checking")
+						|	_ => raise Fail "Type fail, uncaught during type checking\n")
 				|	NEGATE	=>
 						(case evalExp (exp1, e) of
 							(IntVal i, _) => (IntVal (~i), e)
-						|	_ => raise Fail "Type fail, uncaught during type checking"))
+						|	_ => raise Fail "Type fail, uncaught during type checking\n"))
 		|	AppExp (f, exp1) =>
 				(case envLookup (f, e) of
 					Lambda (x, _, _, exp2) =>
@@ -179,7 +184,7 @@ struct
 						in
 							(ret2, e)
 						end
-				|	_ => raise Fail "Type fail, uncaught during type checking")
+				|	_ => raise Fail "Type fail, uncaught during type checking\n")
 		|	LambdaExp v => (v, e)
 		|	FuncExp (f, v) => (v, envAdd (f, v, e))
 	
@@ -190,4 +195,12 @@ struct
 			in
 				ret::evalList (t, eNew)
 			end
+	
+	fun	printList (nil: value list) = print ""
+	|	printList (h::t: value list) =
+			(case h of
+				IntVal i	=> print ("IntVal " ^ Int.toString i ^ "\n")
+			|	BoolVal b	=> print ("BoolVal " ^ Bool.toString b ^ "\n")
+			|	Lambda (x, typ1, typ2, exp) => print ("Lambda " ^ x ^ ": " ^ typToString typ1 ^ ", return type: " ^ typToString typ2 ^ "\n");
+			printList t)
 end

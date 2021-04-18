@@ -40,8 +40,10 @@ fun main () =
 
 			val programList = parse (stringToLexer str)
 			val _ = AST.typeCheckList (programList, [])
+			val eval = AST.evalList (programList, [])
 		in
-			AST.evalList (programList, [])
+			AST.printList eval
 		end
+		handle Fail s => print s
 
 val _ = main ();
