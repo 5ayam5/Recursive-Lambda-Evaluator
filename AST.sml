@@ -133,11 +133,11 @@ struct
 				|	_ => raise Fail "Type check failed: not a lambda application\n")
 		|	FuncExp (f, v) =>
 				(case v of
-					Lambda l =>
+					Lambda (x, typ1, typ2, exp1) =>
 						let
-							val (ret, _) = typeCheckExp (LambdaExp (Lambda l), e)
+							val (ret, e) = typeCheckExp (LambdaExp (Lambda (x, typ1, typ2, exp1)), envAdd (VarExp f, Lambda (x, typ1, typ2, exp1), e))
 						in
-							(ret, envAdd (VarExp f, Lambda l, e))
+							(Arrow (typ1, typ2), e)
 						end
 				|	_ => raise Fail "Type check failed: not a function declaration\n")
 
