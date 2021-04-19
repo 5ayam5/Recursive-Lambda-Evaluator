@@ -20,7 +20,7 @@
 %left PLUS MINUS
 %left TIMES
 %right NEGATE
-%left ID
+%nonassoc ID BOOL NUM LPAREN
 
 %verbose
 
@@ -51,7 +51,10 @@
 		|	NOT exp (AST.UnExp (AST.NOT, exp))
 		|	NEGATE exp (AST.UnExp (AST.NEGATE, exp))
 		|	LPAREN exp RPAREN (exp)
-		|	ID exp (AST.AppExp (ID, exp))
+		|	exp ID (AST.AppExp (exp, AST.VarExp ID))
+		|	exp BOOL (AST.AppExp (exp, if BOOL = "TRUE" then AST.BoolExp true else AST.BoolExp false))
+		|	exp NUM (AST.AppExp (exp, AST.IntExp NUM))
+		|	exp LPAREN exp RPAREN (AST.AppExp (exp1, exp2))
 		|	LAMBDA LPAREN ID TYPDEF typ RPAREN TYPDEF typ DEF exp (AST.LambdaExp (AST.Lambda (ID, typ1, typ2, exp)))
 		|	FUNC ID LPAREN ID TYPDEF typ RPAREN TYPDEF typ DEF exp (AST.FuncExp (ID1, AST.Lambda (ID2, typ1, typ2, exp)))
 	
