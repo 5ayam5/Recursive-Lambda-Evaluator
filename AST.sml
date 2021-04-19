@@ -31,7 +31,7 @@ struct
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
 		|	NONE		=> raise Fail ("Use of undeclared variable" ^ (case var of VarExp y => ": " ^ y | _ => "") ^ "\n")
-	
+
 	fun envAdd (var: exp, v: value, e: env): env = (var, v)::e
 
 	fun typToString (ty: typ): string =
@@ -39,6 +39,20 @@ struct
 			Int		=> "int"
 		|	Bool	=> "bool"
 		|	Arrow (typ1, typ2) => "(" ^ typToString typ1 ^ " -> " ^ typToString typ2 ^ ")"
+
+	fun genVal (ty: typ): value =
+		let
+			fun genExp (ty: typ): exp =
+				case ty of
+					Int		=> IntExp 0
+				|	Bool	=> BoolExp false
+				|	a		 => LambdaExp (genVal a)
+		in
+			case ty of
+				Int		=> IntVal 0
+			|	Bool	=> BoolVal false
+			|	Arrow (typ1, typ2) => Lambda ("_", typ1, typ2, genExp typ2)
+		end
 
 	fun typeCheckExp (expr: exp, e: env): typ * env =
 		case expr of
@@ -110,13 +124,23 @@ struct
 				|	_ => raise Fail "Type check failed: not a function application\n")
 		|	LambdaExp v =>
 				(case v of
-					Lambda (_, typ1, typ2, _) => (Arrow (typ1, typ2), e)
+					Lambda (x, typ1, typ2, exp1) =>
+						let
+							val (ret, _) = typeCheckExp (exp1, envAdd (VarExp x, genVal typ1, e))
+						in
+							if ret = typ2 then (Arrow (typ1, typ2), e) else raise Fail "Type check failed: expected and evaluated return type mismatch\n"
+						end
 				|	_ => raise Fail "Type check failed: not a lambda application\n")
 		|	FuncExp (f, v) =>
 				(case v of
-					Lambda (y, typ1, typ2, exp1) => (Arrow (typ1, typ2), envAdd (VarExp f, Lambda (y, typ1, typ2, exp1), e))
+					Lambda l =>
+						let
+							val (ret, _) = typeCheckExp (LambdaExp (Lambda l), e)
+						in
+							(ret, envAdd (VarExp f, Lambda l, e))
+						end
 				|	_ => raise Fail "Type check failed: not a function declaration\n")
-	
+
 	fun	typeCheckList (nil: exp list, e: env): bool = true
 	|	typeCheckList (h::t: exp list, e: env): bool =
 			let
@@ -211,7 +235,7 @@ struct
 					
 		|	LambdaExp v => (v, e)
 		|	FuncExp (f, v) => (v, envAdd (VarExp f, v, e))
-	
+
 	fun	evalList (nil: exp list, e: env): value list = []
 	|	evalList (h::t: exp list, e: env): value list =
 			let
@@ -219,7 +243,7 @@ struct
 			in
 				ret::evalList (t, eNew)
 			end
-	
+
 	fun	printList (nil: value list) = print ""
 	|	printList (h::t: value list) =
 			(case h of
