@@ -26,11 +26,11 @@
 
 %%
 	InputFile:	program (program)
-	
+
 	program:	statement program (statement::program)
 			|	exp ([exp])
 			|	statement ([statement])
-	
+
 	statement:	exp TERM (exp)
 
 	exp:	BOOL (if BOOL = "TRUE" then AST.BoolExp true else AST.BoolExp false)
@@ -57,7 +57,7 @@
 		|	exp LPAREN exp RPAREN (AST.AppExp (exp1, exp2))
 		|	LAMBDA LPAREN ID TYPDEF typ RPAREN TYPDEF typ DEF exp (AST.LambdaExp (AST.Lambda (ID, typ1, typ2, exp)))
 		|	FUNC ID LPAREN ID TYPDEF typ RPAREN TYPDEF typ DEF exp (AST.FuncExp (ID1, AST.Lambda (ID2, typ1, typ2, exp)))
-	
+
 	typ:	typ MAP typ (AST.Arrow (typ1, typ2))
 		|	TYPE (if TYPE = "int" then AST.Int else AST.Bool)
 		|	LPAREN typ RPAREN MAP typ (AST.Arrow (typ1, typ2))

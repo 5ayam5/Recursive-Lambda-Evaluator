@@ -30,7 +30,7 @@ struct
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
 		|	NONE		=> raise Fail ("Use of undeclared variable" ^ (case var of VarExp y => ": " ^ y | _ => "") ^ "\n")
-	
+
 	fun typEnvLookup (var: exp, e: typEnv): typ =
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
