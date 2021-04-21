@@ -1,7 +1,7 @@
-all: lexer.lex.sml parser.yacc.* a2
+all: lexer.lex.sml parser.yacc.* a3
 
-a2: a2.mlb lexer.lex.sml parser.yacc.* AST.sml main.sml
-	mlton a2.mlb
+a3: a3.mlb lexer.lex.sml parser.yacc.* AST.sml main.sml
+	mlton a3.mlb
 
 load: lexer.lex.sml parser.yacc.*
 	rlwrap sml loader.sml
@@ -13,4 +13,4 @@ parser.yacc.*: parser.yacc
 	mlyacc parser.yacc
 
 clean:
-	rm lexer.lex.* parser.yacc.* a2
+	rm -f lexer.lex.* parser.yacc.* a3

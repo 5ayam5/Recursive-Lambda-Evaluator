@@ -16,7 +16,7 @@
 %right IMPLIES
 %left AND OR XOR EQUALS
 %right NOT
-%left LESSTHAN GREATERTHAN
+%nonassoc LESSTHAN GREATERTHAN
 %left PLUS MINUS
 %left TIMES
 %right NEGATE
