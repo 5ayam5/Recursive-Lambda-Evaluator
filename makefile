@@ -1,4 +1,4 @@
-all: lexer.lex.sml parser.yacc.* a3
+build: lexer.lex.sml parser.yacc.* a3
 
 a3: a3.mlb lexer.lex.sml parser.yacc.* AST.sml main.sml
 	mlton a3.mlb

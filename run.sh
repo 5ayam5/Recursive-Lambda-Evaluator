@@ -1,4 +1,4 @@
-make
+make build
 echo
 for file in testcases/*
 do
