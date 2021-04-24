@@ -23,22 +23,22 @@ struct
 						| LambdaExp of value
 						| FuncExp of id * value
 
-	type env = (exp * value) list
-	type typEnv = (exp * typ) list
+	type env = (id * value) list
+	type typEnv = (id * typ) list
 
-	fun envLookup (var: exp, e: env): value =
+	fun envLookup (var: id, e: env): value =
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
-		|	NONE		=> raise Fail ("Use of undeclared variable" ^ (case var of VarExp y => ": " ^ y | _ => "") ^ "\n")
+		|	NONE		=> raise Fail ("Use of undeclared variable: " ^ var ^ "\n")
 
-	fun typEnvLookup (var: exp, e: typEnv): typ =
+	fun typEnvLookup (var: id, e: typEnv): typ =
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
-		|	NONE		=> raise Fail ("Use of undeclared variable" ^ (case var of VarExp y => ": " ^ y | _ => "") ^ "\n")
+		|	NONE		=> raise Fail ("Use of undeclared variable: " ^ var ^ "\n")
 
-	fun envAdd (var: exp, v: value, e: env): env = (var, v)::e
+	fun envAdd (var: id, v: value, e: env): env = (var, v)::e
 
-	fun typEnvAdd (var: exp, v: typ, e: typEnv): typEnv = (var, v)::e
+	fun typEnvAdd (var: id, v: typ, e: typEnv): typEnv = (var, v)::e
 
 	fun typToString (ty: typ): string =
 		case ty of
@@ -50,11 +50,11 @@ struct
 		case expr of
 			BoolExp b	=> (Bool, e)
 		|	IntExp i	=> (Int, e)
-		|	VarExp x => (typEnvLookup (VarExp x, e), e)
+		|	VarExp x => (typEnvLookup (x, e), e)
 		|	LetExp (ValDecl (x, v), exp1) =>
 				let
 					val (ret, _) = typeCheckExp (v, e)
-					val (typ1, _) = typeCheckExp (exp1, typEnvAdd (VarExp x, ret, e))
+					val (typ1, _) = typeCheckExp (exp1, typEnvAdd (x, ret, e))
 				in
 					(typ1, e)
 				end
@@ -110,14 +110,14 @@ struct
 				(case v of
 					Lambda (x, typ1, typ2, exp1) =>
 						let
-							val (ret, _) = typeCheckExp (exp1, typEnvAdd (VarExp x, typ1, e))
+							val (ret, _) = typeCheckExp (exp1, typEnvAdd (x, typ1, e))
 						in
 							if ret = typ2 then (Arrow (typ1, typ2), e) else raise Fail "Type check failed: expected and evaluated return type mismatch\n"
 						end
 				|	_ => raise Fail "Type check failed: not a lambda application\n")
 		|	FuncExp (f, v) =>
 				(case v of
-					Lambda (x, typ1, typ2, exp1) => typeCheckExp (LambdaExp (Lambda (x, typ1, typ2, exp1)), typEnvAdd (VarExp f, Arrow (typ1, typ2), e))
+					Lambda (x, typ1, typ2, exp1) => typeCheckExp (LambdaExp (Lambda (x, typ1, typ2, exp1)), typEnvAdd (f, Arrow (typ1, typ2), e))
 				|	_ => raise Fail "Type check failed: not a function declaration\n")
 
 	fun	typeCheckList (nil: exp list, e: typEnv): bool = true
@@ -152,11 +152,11 @@ struct
 		case expr of
 			BoolExp b	=> (BoolVal b, e)
 		|	IntExp i	=> (IntVal i, e)
-		|	VarExp x	=> (envLookup (VarExp x, e), e)
+		|	VarExp x	=> (envLookup (x, e), e)
 		|	LetExp (ValDecl (x, v), exp1) =>
 				let
 					val (ret1, _) = evalExp (v, e)
-					val (ret2, _) = evalExp (exp1, envAdd (VarExp x, ret1, e))
+					val (ret2, _) = evalExp (exp1, envAdd (x, ret1, e))
 				in
 					(ret2, e)
 				end
@@ -213,7 +213,7 @@ struct
 				|	_ => raise Fail "Type fail, uncaught during type checking\n")
 					
 		|	LambdaExp v => (v, e)
-		|	FuncExp (f, v) => (v, envAdd (VarExp f, v, e))
+		|	FuncExp (f, v) => (v, envAdd (f, v, e))
 
 	fun	evalList (nil: exp list, e: env): value list = []
 	|	evalList (h::t: exp list, e: env): value list =
