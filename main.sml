@@ -39,11 +39,11 @@ fun main () =
 			val _ = TextIO.closeIn inputStream
 
 			val programList = parse (stringToLexer str)
-			val _ = AST.typeCheckList (programList, [])
+			val _ = (AST.formulaNumber := 0; AST.typeCheckList (programList, []))
 			val eval = AST.evalList (programList, [])
 		in
 			AST.printList eval
 		end
-		handle Fail s => print s
+		handle Fail s => print ("Formula number: " ^ Int.toString (!AST.formulaNumber) ^ "\n" ^ s)
 
 val _ = main ();

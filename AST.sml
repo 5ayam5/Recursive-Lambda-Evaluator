@@ -26,6 +26,8 @@ struct
 	type env = (id * value) list
 	type typEnv = (id * typ) list
 
+	val formulaNumber = ref(0)
+
 	fun envLookup (var: id, e: env): value =
 		case List.find(fn (x, _) => x = var) e of
 			SOME (x, v) => v
@@ -125,7 +127,7 @@ struct
 			let
 				val (_, eNew) = typeCheckExp (h, e)
 			in
-				typeCheckList (t, eNew)
+				(formulaNumber := !formulaNumber + 1; typeCheckList (t, eNew))
 			end
 
 	fun evaluateLambda (x: id, v: value, expr: exp): exp =
