@@ -50,8 +50,8 @@ struct
 
 	fun typeCheckExp (expr: exp, e: typEnv): typ * typEnv =
 		case expr of
-			BoolExp b	=> (Bool, e)
-		|	IntExp i	=> (Int, e)
+			BoolExp _	=> (Bool, e)
+		|	IntExp _	=> (Int, e)
 		|	VarExp x => (typEnvLookup (x, e), e)
 		|	LetExp (ValDecl (x, v), exp1) =>
 				let
@@ -67,11 +67,7 @@ struct
 							val (ret2, _) = typeCheckExp (exp2, e)
 							val (ret3, _) = typeCheckExp (exp3, e)
 						in
-							case (ret2, ret3) of
-								(Int, Int)				=> (Int, e)
-							|	(Bool, Bool)			=> (Bool, e)
-							|	(Arrow a1, Arrow a2)	=> if a1 = a2 then (Arrow a1, e) else raise Fail "Type check failed: type mismatch in if branches\n"
-							|	_ => raise Fail "Type check failed: type mismatch in if branches\n"
+							if ret2 = ret3 then (ret2, e) else raise Fail "Type check failed: type mismatch in if branches\n"
 						end
 				|	_ => raise Fail "Type check failed: predicate not of type boolean\n")
 		|	BinExp (biop, exp1, exp2) =>
