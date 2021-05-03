@@ -12,7 +12,7 @@
 %noshift EOF
 
 %right MAP
-%right DEF
+%nonassoc DEF
 %right IMPLIES
 %left AND OR XOR EQUALS
 %right NOT
