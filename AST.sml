@@ -97,9 +97,9 @@ struct
 								|	_			=> raise Fail "Type check failed: type mismatch for unop, incorrect operand for int operator\n"))
 		|	AppExp (f, exp1) =>
 				(case typeCheckExp (f, e) of
-					(Arrow (typ1, typ2), _) =>
+					(Arrow (typ1, typ2), e1) =>
 						let
-							val (ret, _) = typeCheckExp (exp1, e)
+							val (ret, _) = typeCheckExp (exp1, e1)
 						in
 							if typ1 = ret then (typ2, e) else raise Fail "Type check failed: function applied to wrong argument\n"
 						end
@@ -201,10 +201,10 @@ struct
 						|	_ => raise Fail "Type fail, uncaught during type checking\n"))
 		|	AppExp (f, exp1) =>
 				(case evalExp (f, e) of
-					(Lambda (x, _, _, exp2), _) =>
+					(Lambda (x, _, _, exp2), e1) =>
 						let
-							val (ret1, _) = evalExp (exp1, e)
-							val (ret2, _) = evalExp (evaluateLambda (x, ret1, exp2), e)
+							val (ret1, _) = evalExp (exp1, e1)
+							val (ret2, _) = evalExp (evaluateLambda (x, ret1, exp2), e1)
 						in
 							(ret2, e)
 						end
@@ -218,7 +218,7 @@ struct
 			let
 				val (ret, eNew) = evalExp (h, e)
 			in
-				ret::evalList (t, eNew)
+				(formulaNumber := !formulaNumber + 1; ret::evalList (t, eNew))
 			end
 
 	fun	printList (nil: value list) = print ""

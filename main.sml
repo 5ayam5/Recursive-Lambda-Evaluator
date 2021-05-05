@@ -40,7 +40,7 @@ fun main () =
 
 			val programList = parse (stringToLexer str)
 			val _ = (AST.formulaNumber := 0; AST.typeCheckList (programList, []))
-			val eval = AST.evalList (programList, [])
+			val eval = (AST.formulaNumber := 0; AST.evalList (programList, []))
 		in
 			AST.printList eval
 		end

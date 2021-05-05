@@ -1,0 +1,1 @@
+(fun f (x:int):int => if x EQUALS 0 then 1 else f (x MINUS 1) TIMES x fi) (f 3);
