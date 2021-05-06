@@ -134,7 +134,7 @@ struct
 				|	BoolVal b	=> BoolExp b
 				|	l			=> LambdaExp l)
 				else VarExp y
-		|	LetExp (ValDecl (y, exp1), exp2) => LetExp (ValDecl (y, exp1), if x = y then exp2 else evaluateLambda (x, v, exp2))
+		|	LetExp (ValDecl (y, exp1), exp2) => LetExp (ValDecl (y, evaluateLambda (x, v, exp1)), if x = y then exp2 else evaluateLambda (x, v, exp2))
 		|	ITExp (exp1, exp2, exp3) => ITExp (evaluateLambda (x, v, exp1), evaluateLambda (x, v, exp2), evaluateLambda (x, v, exp3))
 		|	BinExp (biop, exp1, exp2) => BinExp (biop, evaluateLambda (x, v, exp1), evaluateLambda (x, v, exp2))
 		|	UnExp (uop, exp1) => UnExp (uop, evaluateLambda (x, v, exp1))

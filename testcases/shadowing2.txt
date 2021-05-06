@@ -1,0 +1,7 @@
+fun f (y: int): int =>
+	let
+		y = y PLUS 1
+	in
+		y
+	end;
+f 3
